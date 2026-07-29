@@ -9,6 +9,7 @@
     "lint": "eslint",
     "push:order:github": "node scripts/push-order-to-github.mjs",
     "export:github:bootstrap": "node scripts/export-github-bootstrap-bundle.mjs",
+    "export:github-pages-site": "node scripts/export-gh-pages-site.mjs",
     "export:ops:report": "node scripts/export-daily-ops-report.mjs",
     "export:handoff:bundle": "node scripts/export-operating-handoff-bundle.mjs",
     "export:artifacts": "node scripts/export-all-artifacts.mjs"

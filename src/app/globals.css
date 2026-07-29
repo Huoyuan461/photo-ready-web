@@ -28,7 +28,7 @@
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
   --color-accent-soft: var(--accent-soft);
-  --font-sans: var(--font-inter);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
@@ -42,7 +42,7 @@ html {
 body {
   margin: 0;
   color: var(--foreground);
-  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
     radial-gradient(circle at 8% 0%, rgba(255, 100, 47, 0.08), transparent 24%),
     radial-gradient(circle at 90% 10%, rgba(255, 183, 121, 0.12), transparent 18%),
@@ -71,4 +71,3 @@ img {
     scroll-behavior: auto;
   }
 }
-

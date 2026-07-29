@@ -1,0 +1,68 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production app
+        run: npm run build
+
+      - name: Start production server
+        run: |
+          npm run start -- --hostname 127.0.0.1 --port 3002 > /tmp/photo-ready.log 2>&1 &
+
+      - name: Wait for server
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3002 >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Production server did not start"
+          cat /tmp/photo-ready.log
+          exit 1
+
+      - name: Export static GitHub Pages site
+        run: npm run export:github-pages-site
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

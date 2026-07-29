@@ -2,6 +2,7 @@
 
 import {
   startTransition,
+  useEffect,
   useMemo,
   useId,
   useState,
@@ -32,6 +33,16 @@ type RankedDish = DishCandidate & {
   rankLabel: string;
 };
 
+type ImportedOrder = {
+  id: string;
+  sourceText: string;
+  merchantName: string;
+  dishName: string;
+  cuisineId: CuisineId;
+  priceLabel: string;
+  createdAt: string;
+};
+
 const TAB_ORDER: Array<{
   id: AppTab;
   label: string;
@@ -52,8 +63,39 @@ export function MealMindApp() {
   const [selectedDishId, setSelectedDishId] = useState(dishCandidates[0].id);
   const [refreshTick, setRefreshTick] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installHintVisible, setInstallHintVisible] = useState(false);
+  const [isStandalone] = useState(() => isStandaloneDisplayMode());
+  const [importDraft, setImportDraft] = useState("");
+  const [importParseStatus, setImportParseStatus] = useState<string>(
+    "可以从外卖通知、分享文本或订单详情中粘贴内容来自动识别。",
+  );
+  const [importedOrders, setImportedOrders] = useState<ImportedOrder[]>([
+    {
+      id: "seed-1",
+      sourceText:
+        "美团外卖 Blue Ocean Bistro Ocean Fresh Poke Bowl ¥46 18:25 已送达",
+      merchantName: "Blue Ocean Bistro",
+      dishName: "Ocean Fresh Poke Bowl",
+      cuisineId: "japanese",
+      priceLabel: "¥46",
+      createdAt: new Date().toISOString(),
+    },
+  ]);
 
   const digest = useMemo(() => createDailyDigest(new Date()), []);
+
+  useEffect(() => {
+    const beforeInstallPromptHandler = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener("beforeinstallprompt", beforeInstallPromptHandler);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", beforeInstallPromptHandler);
+    };
+  }, []);
 
   const rankedRecommendations = useMemo(
     () =>
@@ -62,8 +104,9 @@ export function MealMindApp() {
         preferences,
         refreshTick,
         selectedDishId,
+        importedOrders,
       ).slice(0, 3),
-    [preferences, refreshTick, selectedDishId],
+    [preferences, refreshTick, selectedDishId, importedOrders],
   );
 
   const effectiveSelectedDishId = rankedRecommendations.some(
@@ -147,6 +190,31 @@ export function MealMindApp() {
       setActiveTab(tab);
     });
   };
+
+  async function handleInstallApp() {
+    if (installPrompt) {
+      installPrompt.prompt();
+      await installPrompt.userChoice.catch(() => null);
+      setInstallPrompt(null);
+      return;
+    }
+
+    setInstallHintVisible((current) => !current);
+  }
+
+  function handleParseImportDraft() {
+    const parsed = parseImportedOrder(importDraft);
+    if (!parsed) {
+      setImportParseStatus("没有识别到商家或餐品名，换一段通知文本再试试。");
+      return;
+    }
+
+    setImportedOrders((current) => [parsed, ...current].slice(0, 6));
+    setImportParseStatus(
+      `已识别：${parsed.merchantName} · ${parsed.dishName}，它会参与今天的 3 选 1 排序。`,
+    );
+    setImportDraft("");
+  }
 
   return (
     <main className={`min-h-screen ${themeClasses} px-3 py-3 sm:px-6 sm:py-6`}>
@@ -233,7 +301,11 @@ export function MealMindApp() {
             ) : activeTab === "import" ? (
               <ImportScreen
                 panelClasses={panelClasses}
+                mutedTextClasses={mutedTextClasses}
                 preferences={preferences}
+                importDraft={importDraft}
+                importParseStatus={importParseStatus}
+                importedOrders={importedOrders}
                 dietaryOptions={dietaryOptionDefs}
                 cuisineOptions={cuisineOptionDefs}
                 tasteOptions={tasteOptionDefs}
@@ -242,6 +314,8 @@ export function MealMindApp() {
                 onToggleCuisine={toggleCuisine}
                 onPriceBoundChange={setPriceBound}
                 onTasteChange={setTaste}
+                onImportDraftChange={setImportDraft}
+                onParseImportDraft={handleParseImportDraft}
                 onSave={() => handleTabChange("today")}
               />
             ) : (
@@ -250,6 +324,9 @@ export function MealMindApp() {
                 mutedTextClasses={mutedTextClasses}
                 isDarkMode={isDarkMode}
                 onDarkModeChange={setIsDarkMode}
+                isStandalone={isStandalone}
+                installHintVisible={installHintVisible}
+                onInstallApp={handleInstallApp}
               />
             )}
           </section>
@@ -479,7 +556,11 @@ function TodayScreen({
 
 function ImportScreen({
   panelClasses,
+  mutedTextClasses,
   preferences,
+  importDraft,
+  importParseStatus,
+  importedOrders,
   dietaryOptions,
   cuisineOptions,
   tasteOptions,
@@ -488,10 +569,16 @@ function ImportScreen({
   onToggleCuisine,
   onPriceBoundChange,
   onTasteChange,
+  onImportDraftChange,
+  onParseImportDraft,
   onSave,
 }: {
   panelClasses: string;
+  mutedTextClasses: string;
   preferences: PreferenceState;
+  importDraft: string;
+  importParseStatus: string;
+  importedOrders: ImportedOrder[];
   dietaryOptions: typeof dietaryOptionDefs;
   cuisineOptions: typeof cuisineOptionDefs;
   tasteOptions: typeof tasteOptionDefs;
@@ -500,6 +587,8 @@ function ImportScreen({
   onToggleCuisine: (id: CuisineId) => void;
   onPriceBoundChange: (bound: "min" | "max", value: number) => void;
   onTasteChange: (taste: TasteId, value: number) => void;
+  onImportDraftChange: (value: string) => void;
+  onParseImportDraft: () => void;
   onSave: () => void;
 }) {
   return (
@@ -611,6 +700,54 @@ function ImportScreen({
             <CameraIcon />
             从外卖平台导入历史订单
           </button>
+          <textarea
+            value={importDraft}
+            onChange={(event) => onImportDraftChange(event.target.value)}
+            placeholder="粘贴外卖通知、分享文本或订单详情，例如：美团外卖 Blue Ocean Bistro Ocean Fresh Poke Bowl ¥46 18:25"
+            className="min-h-[110px] w-full rounded-[18px] border border-[#e2e6ee] bg-white px-4 py-3 text-[14px] leading-7 text-[#1d2026] outline-none transition placeholder:text-[#9ba1ad] focus:border-[#ff642f]/40 focus:ring-4 focus:ring-[#ff642f]/10"
+          />
+          <button
+            type="button"
+            onClick={onParseImportDraft}
+            className="flex w-full items-center justify-center rounded-[18px] bg-[#111827] px-4 py-3.5 text-[15px] font-semibold text-white transition hover:bg-[#0b1220]"
+          >
+            解析订单文本并加入本地知识库
+          </button>
+          <div className="rounded-[18px] bg-[#f7f8fc] px-4 py-3 text-[13px] leading-6 text-[#5d6471]">
+            {importParseStatus}
+          </div>
+          <div className="space-y-2">
+            <div className="text-[14px] font-semibold text-[#1d2026]">
+              最近导入
+            </div>
+            <div className="space-y-2">
+              {importedOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="rounded-[18px] border border-[#e9edf3] bg-white px-4 py-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[14px] font-semibold text-[#1d2026]">
+                        {order.dishName}
+                      </div>
+                      <div className={`mt-0.5 text-[13px] ${mutedTextClasses}`}>
+                        {order.merchantName} · {cuisineOptions.find((item) => item.id === order.cuisineId)?.label}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[14px] font-semibold text-[#ff5d2e]">
+                        {order.priceLabel}
+                      </div>
+                      <div className={`text-[12px] ${mutedTextClasses}`}>
+                        已导入
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="text-center text-[13px] text-[#6f7480]">
             支持平台：
             <span className="ml-2 inline-flex flex-wrap justify-center gap-2 align-middle">
@@ -643,11 +780,17 @@ function SettingsScreen({
   mutedTextClasses,
   isDarkMode,
   onDarkModeChange,
+  isStandalone,
+  installHintVisible,
+  onInstallApp,
 }: {
   panelClasses: string;
   mutedTextClasses: string;
   isDarkMode: boolean;
   onDarkModeChange: (value: boolean) => void;
+  isStandalone: boolean;
+  installHintVisible: boolean;
+  onInstallApp: () => void;
 }) {
   return (
     <div className="space-y-4">
@@ -718,10 +861,36 @@ function SettingsScreen({
         <SettingsRow icon={<InfoIcon />} label="关于 MealMind" />
         <SettingsRow icon={<DocIcon />} label="隐私政策" />
         <SettingsRow icon={<EditIcon />} label="用户协议" />
+        <SettingsRow icon={<PhoneIcon />} label="安装到主屏幕" rightNode={null} />
         <div className={`pb-3 pt-2 text-center text-[13px] ${mutedTextClasses}`}>
           Version 2.1.0
         </div>
       </SettingsGroup>
+
+      {!isStandalone ? (
+        <section className={`rounded-[28px] border ${panelClasses} p-4`}>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="text-[16px] font-semibold">添加到手机主屏幕</div>
+              <div className={`mt-1 text-[13px] ${mutedTextClasses}`}>
+                让它像原生 App 一样打开，支持离线保留最近推荐。
+              </div>
+              {installHintVisible ? (
+                <div className={`mt-3 text-[13px] ${mutedTextClasses}`}>
+                  iPhone 上请点共享按钮，然后选择“添加到主屏幕”。
+                </div>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={onInstallApp}
+              className="shrink-0 rounded-full bg-[#ff642f] px-4 py-2 text-[14px] font-semibold text-white shadow-[0_10px_20px_rgba(255,100,47,0.18)]"
+            >
+              安装
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <button
         type="button"
@@ -1157,7 +1326,9 @@ function rankDishes(
   preferences: PreferenceState,
   refreshTick: number,
   selectedDishId: string,
+  importedOrders: ImportedOrder[],
 ) {
+  const latestImportedOrder = importedOrders[0];
   const allowed = dishes.filter((dish) => {
     if (preferences.restrictions.vegetarian && !dish.isVegetarian) {
       return false;
@@ -1192,6 +1363,7 @@ function rankDishes(
       score -= dish.id === selectedDishId ? 2 : 0;
       score += refreshTick % 2 === 0 && index === 2 ? 4 : 0;
       score += refreshTick % 3 === 1 && index === 0 ? 2 : 0;
+      score += importedBoost(dish, latestImportedOrder);
 
       return {
         ...dish,
@@ -1233,6 +1405,56 @@ function tasteScore(dish: DishCandidate, preferences: PreferenceState) {
     const actual = profile[key] / 100;
     return total + Math.max(0, 8 - Math.abs(desired - actual) * 12);
   }, 0);
+}
+
+function importedBoost(dish: DishCandidate, latestOrder?: ImportedOrder) {
+  if (!latestOrder) {
+    return 0;
+  }
+
+  let score = 0;
+  if (latestOrder.merchantName === dish.merchantName) {
+    score += 16;
+  }
+  if (latestOrder.dishName === dish.dishName) {
+    score += 24;
+  }
+  if (latestOrder.cuisineId === dish.cuisineId) {
+    score += 10;
+  }
+
+  return score;
+}
+
+function parseImportedOrder(sourceText: string): ImportedOrder | null {
+  const normalized = sourceText.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const matchedDish = dishCandidates.find(
+    (dish) =>
+      normalized.toLowerCase().includes(dish.dishName.toLowerCase()) ||
+      normalized.toLowerCase().includes(dish.merchantName.toLowerCase()),
+  );
+
+  const merchantName =
+    matchedDish?.merchantName ??
+    normalized.match(/([A-Za-z0-9\u4e00-\u9fa5\s&'/-]{3,40})/)?.[1]?.trim() ??
+    "未知商家";
+
+  const dishName = matchedDish?.dishName ?? merchantName;
+  const priceLabel = normalized.match(/¥\s?\d+(?:\.\d{1,2})?/g)?.[0] ?? "¥--";
+
+  return {
+    id: `import-${Date.now()}`,
+    sourceText: normalized,
+    merchantName,
+    dishName,
+    cuisineId: matchedDish?.cuisineId ?? "american",
+    priceLabel,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 function BrandMark() {
@@ -1440,6 +1662,32 @@ function MessageIcon() {
       <path d="M4.5 5.5h15a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-6l-4.5 3.5V17H4.5a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2Z" />
     </svg>
   );
+}
+
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="7.2" y="2.8" width="9.6" height="18.4" rx="2.3" />
+      <path d="M10 5.3h4" />
+      <circle cx="12" cy="18.1" r="0.8" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
+
+function isStandaloneDisplayMode() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const standaloneMatch = window.matchMedia?.("(display-mode: standalone)")?.matches;
+  const iosStandalone = (window.navigator as Navigator & { standalone?: boolean }).standalone;
+
+  return Boolean(standaloneMatch || iosStandalone);
 }
 
 function StarIcon({ filled = false }: { filled?: boolean }) {

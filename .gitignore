@@ -18,6 +18,7 @@
 /.next-*/
 /.next-cache-*/
 /out/
+/site-dist/
 
 # production
 /build

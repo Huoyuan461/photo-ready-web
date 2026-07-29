@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "@/app/globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -13,6 +7,24 @@ export const metadata: Metadata = {
   ),
   title: "MealMind AI",
   description: "A daily 3-choice meal recommendation app built with React and Tailwind CSS.",
+  applicationName: "MealMind AI",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MealMind AI",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: "/icon",
+    apple: "/apple-icon",
+  },
+};
+
+export const viewport = {
+  themeColor: "#ff642f",
+  colorScheme: "light" as const,
 };
 
 export default function RootLayout({
@@ -24,7 +36,7 @@ export default function RootLayout({
     <html
       lang="zh-CN"
       data-scroll-behavior="smooth"
-      className={`${inter.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
       <body className="min-h-full bg-[#f3f4f8]">
         <div className="flex min-h-screen flex-col">{children}</div>
