@@ -1,0 +1,32 @@
+name: Department Request
+description: Propose a workflow change, operational improvement, or product request for a department owner.
+title: "[Dept Request] "
+labels:
+  - dept:product
+body:
+  - type: dropdown
+    id: department
+    attributes:
+      label: Department
+      options:
+        - Growth
+        - Product
+        - Engineering
+        - Customer Success
+        - Finance & Admin
+    validations:
+      required: true
+  - type: textarea
+    id: request_summary
+    attributes:
+      label: Request summary
+      description: Describe the workflow gap or product change.
+    validations:
+      required: true
+  - type: textarea
+    id: desired_outcome
+    attributes:
+      label: Desired outcome
+      description: Explain what success looks like for the department.
+    validations:
+      required: true

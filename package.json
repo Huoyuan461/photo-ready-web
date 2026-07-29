@@ -1,0 +1,34 @@
+{
+  "name": "photo-ready-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "push:order:github": "node scripts/push-order-to-github.mjs",
+    "export:github:bootstrap": "node scripts/export-github-bootstrap-bundle.mjs",
+    "export:ops:report": "node scripts/export-daily-ops-report.mjs",
+    "export:handoff:bundle": "node scripts/export-operating-handoff-bundle.mjs",
+    "export:artifacts": "node scripts/export-all-artifacts.mjs"
+  },
+  "dependencies": {
+    "@fal-ai/client": "^1.10.1",
+    "next": "16.2.11",
+    "openai": "^6.49.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.11",
+    "playwright": "^1.62.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,37 @@
+name: Order Intake Sync
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  normalize-order-intake:
+    if: contains(join(github.event.issue.labels.*.name, ','), 'order-intake')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add normalized handoff comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(label => label.name);
+            const body = [
+              "### Order workflow automation",
+              "",
+              "- Move this issue into the GitHub Project field `Stage: Intake`.",
+              "- Apply department label and assign the matching lead.",
+              "- When payment is confirmed, move the item to `Paid`.",
+              "- When delivery is complete, add a retention follow-up task.",
+              "",
+              `Current labels: ${labels.join(", ")}`
+            ].join("\n");
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body,
+            });

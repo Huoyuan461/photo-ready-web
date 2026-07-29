@@ -1,0 +1,33 @@
+name: Retention Follow-up
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "GitHub issue number for the delivered order"
+        required: true
+
+permissions:
+  issues: write
+
+jobs:
+  open-follow-up:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post retention checklist
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const issue_number = Number(core.getInput("issue_number"));
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              body: [
+                "### Retention checklist",
+                "",
+                "- Send the 3-day follow-up email.",
+                "- Offer an upsell to PhotoReady Unlimited or side packs.",
+                "- Ask for referral or testimonial if delivery was successful.",
+              ].join("\\n"),
+            });

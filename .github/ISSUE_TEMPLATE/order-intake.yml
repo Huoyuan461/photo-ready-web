@@ -1,0 +1,58 @@
+name: Order Intake
+description: Capture a paid order or manual intake that should enter the GitHub company workflow.
+title: "[Order] "
+labels:
+  - order-intake
+body:
+  - type: input
+    id: order_id
+    attributes:
+      label: Order ID
+      description: Use the generated order id from the app or billing system.
+      placeholder: ord_260724_ab12
+    validations:
+      required: true
+  - type: input
+    id: customer_name
+    attributes:
+      label: Customer name
+      placeholder: Jane Doe
+    validations:
+      required: true
+  - type: input
+    id: customer_email
+    attributes:
+      label: Customer email
+      placeholder: jane@example.com
+    validations:
+      required: true
+  - type: dropdown
+    id: product
+    attributes:
+      label: Product
+      options:
+        - PhotoReady Export Pack
+        - PhotoReady Unlimited
+        - PFMEA Offline Pack
+        - Lean Problem Solving Kit
+    validations:
+      required: true
+  - type: dropdown
+    id: owner_department
+    attributes:
+      label: Owning department
+      options:
+        - Growth
+        - Product
+        - Engineering
+        - Customer Success
+        - Finance & Admin
+    validations:
+      required: true
+  - type: textarea
+    id: fulfillment_notes
+    attributes:
+      label: Fulfillment notes
+      description: Include any edge cases, promised extras, or refund risk.
+    validations:
+      required: false

@@ -1,0 +1,43 @@
+name: Order Paid Transition
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "GitHub issue number for the paid order"
+        required: true
+      payment_reference:
+        description: "Optional payment reference or payout id"
+        required: false
+
+permissions:
+  issues: write
+
+jobs:
+  move-paid-order:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post paid transition checklist
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const issue_number = Number(core.getInput("issue_number"));
+            const paymentReference = core.getInput("payment_reference");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              body: [
+                "### Payment confirmed",
+                "",
+                "- Move this item to `Stage: Paid` in GitHub Project v2.",
+                "- Confirm `Department: Finance & Admin` if payment reconciliation is still open.",
+                "- Stamp the payment reference into the issue body or linked finance record.",
+                "- Queue the order for fulfillment automation or manual production.",
+                "",
+                paymentReference
+                  ? `Payment reference: ${paymentReference}`
+                  : "Payment reference: not provided",
+              ].join("\\n"),
+            });
