@@ -1,17 +1,9 @@
 import type { Metadata } from "next";
-import { Manrope, Newsreader } from "next/font/google";
-import { AnalyticsBeacon } from "@/components/analytics-beacon";
-import { SiteSchema } from "@/components/site-schema";
-import { siteBranding } from "@/lib/site-data";
+import { Inter } from "next/font/google";
 import "@/app/globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin"],
-});
-
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -19,11 +11,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   ),
-  title: {
-    default: siteBranding.name,
-    template: `%s | ${siteBranding.name}`,
-  },
-  description: siteBranding.description,
+  title: "MealMind AI",
+  description: "A daily 3-choice meal recommendation app built with React and Tailwind CSS.",
 };
 
 export default function RootLayout({
@@ -33,13 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="zh-CN"
       data-scroll-behavior="smooth"
-      className={`${manrope.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full">
-        <AnalyticsBeacon />
-        <SiteSchema />
+      <body className="min-h-full bg-[#f3f4f8]">
         <div className="flex min-h-screen flex-col">{children}</div>
       </body>
     </html>
