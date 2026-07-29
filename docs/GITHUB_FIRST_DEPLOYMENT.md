@@ -68,15 +68,16 @@ In Vercel, import the GitHub repository and set these environment variables:
 - `GITHUB_PROJECT_DEPARTMENT_OPTIONS_JSON`
 - `GITHUB_PROJECT_REVENUE_OPTIONS_JSON`
 
-## 4) GitHub Actions deployment
+## 4) Deployment automation
 
-If you want GitHub Actions to deploy directly, add these repository secrets:
+If your GitHub credentials have `workflow` scope, you can add GitHub Actions deployment later.
+Without that scope, keep the repository as the source of truth and deploy through Vercel import or another Next.js host.
+
+Recommended secrets for later automation:
 
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
-
-Then the workflow at `.github/workflows/deploy-vercel.yml` will deploy on each push to `main`.
 
 ## 5) Production checks
 
@@ -88,4 +89,3 @@ After deployment, verify:
 - `/pricing`, `/privacy`, `/refund`, and `/support` load correctly
 - mobile layout does not overlap
 - checkout links resolve
-
