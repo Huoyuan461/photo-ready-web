@@ -49,23 +49,23 @@ export type ShowcaseCard = {
   bullets: string[];
 };
 
-export const siteName = "Shanmu Tool Hub";
+export const siteName = "PhotoReady";
 export const companyName = "Shanmu Software";
 export const siteTagline =
-  "AI passport photos, delivered tools, and customizable workflow pages in one hub";
+  "AI passport photos, digital packs, and launch pages in one independent hub";
 
 export const siteBranding = {
   name: siteName,
   legalName: companyName,
-  shortName: "Shanmu",
+  shortName: "PhotoReady",
   tagline: siteTagline,
   description:
-    "One configurable web workspace for AI passport photos, finished tool showcases, digital packs, and operations pages, with editable branding and custom delivery support.",
+    "A focused launch site for AI passport photos, standardized digital packs, and configurable product pages, with editable branding and custom delivery support.",
   supportEmail: "huoyuan461@qq.com",
   supportLabel: "huoyuan461@qq.com",
-  logoSquare: "/brand/shanmu-logo-mark.svg",
-  logoWordmark: "/brand/shanmu-logo-wordmark.svg",
-  logoAlt: "Shanmu Tool Hub logo",
+  logoSquare: "/brand/photo-ready-logo-square.png",
+  logoWordmark: "/brand/photo-ready-logo-wordmark.png",
+  logoAlt: "PhotoReady logo",
 };
 
 export const photoPresets: PhotoPreset[] = [

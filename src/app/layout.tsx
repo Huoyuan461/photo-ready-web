@@ -5,13 +5,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   ),
-  title: "MealMind AI",
-  description: "A daily 3-choice meal recommendation app built with React and Tailwind CSS.",
-  applicationName: "MealMind AI",
+  title: "PhotoReady",
+  description:
+    "Create American-style passport photos, LinkedIn headshots, resume photos, and China common-size ID outputs from one portrait.",
+  applicationName: "PhotoReady",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "MealMind AI",
+    title: "PhotoReady",
   },
   formatDetection: {
     telephone: false,
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#ff642f",
+  themeColor: "#0d3b78",
   colorScheme: "light" as const,
 };
 
